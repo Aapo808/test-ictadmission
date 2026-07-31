@@ -1,0 +1,64 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temp files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.tmp/
+tmp/
+*.tmp
+*.bak
+*.orig
+
+# Dependencies and virtual environments
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+__pycache__/
+.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build and output directories
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.parcel-cache/
+.turbo/
+.cache/
+
+# Language / framework artifacts
+*.class
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.gradle/
+target/
+.phpunit.result.cache
+
+# Databases
+*.sqlite
+*.db
