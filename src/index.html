@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Logbook</title>
+  <style>
+    :root { color-scheme: light dark; font-family: Arial, sans-serif; }
+    body { margin: 0; background: #0f172a; color: #f8fafc; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px; }
+    .card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 20px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    button { background: #38bdf8; color: #082f49; border: none; border-radius: 999px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .entry-list { display: grid; gap: 12px; margin-top: 16px; }
+    .entry { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px; }
+    .modal.open { display: flex; }
+    .modal-content { width: min(100%, 480px); background: white; color: #0f172a; border-radius: 16px; padding: 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    input, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; }
+    textarea { min-height: 90px; resize: vertical; }
+    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .muted { color: #94a3b8; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <div>
+          <h1>Unit Logbook</h1>
+          <p class="muted">Keep the platoon updated with the latest field activity.</p>
+        </div>
+        <button id="newEntryBtn">New entry</button>
+      </div>
+      <div id="status" class="muted">Loading entries…</div>
+      <div id="entries" class="entry-list"></div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <h2>New log entry</h2>
+      <form id="entryForm">
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" name="title" required />
+        </div>
+        <div class="field">
+          <label for="body">Body</label>
+          <textarea id="body" name="body" required></textarea>
+        </div>
+        <div class="field">
+          <label for="location">Location (optional)</label>
+          <input id="location" name="location" placeholder="lat, lon" />
+        </div>
+        <div class="actions">
+          <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+          <button type="submit">Save entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const state = { entries: [] };
+    const entriesEl = document.getElementById('entries');
+    const statusEl = document.getElementById('status');
+    const modalEl = document.getElementById('modal');
+    const formEl = document.getElementById('entryForm');
+
+    function renderEntries() {
+      entriesEl.innerHTML = '';
+      if (!state.entries.length) {
+        entriesEl.innerHTML = '<div class="entry"><strong>No entries yet.</strong></div>';
+        return;
+      }
+
+      state.entries
+        .slice()
+        .sort((a, b) => new Date(b.isoTime || 0) - new Date(a.isoTime || 0))
+        .forEach((entry) => {
+          const card = document.createElement('article');
+          card.className = 'entry';
+          const hasCoords = entry.lat != null && entry.lon != null;
+          card.innerHTML = `
+            <h3>${entry.title}</h3>
+            <p>${entry.body}</p>
+            <div class="muted">${new Date(entry.isoTime).toLocaleString()}</div>
+            ${hasCoords ? `<div class="muted">Location: ${entry.lat}, ${entry.lon}</div>` : ''}
+          `;
+          entriesEl.appendChild(card);
+        });
+    }
+
+    async function loadEntries() {
+      statusEl.textContent = 'Loading entries…';
+      try {
+        const res = await fetch('./sample-data/data.json');
+        const data = await res.json();
+        state.entries = data;
+        renderEntries();
+        statusEl.textContent = `${data.length} entries loaded`;
+      } catch (error) {
+        statusEl.textContent = `Error: ${error.message}`;
+      }
+    }
+
+    function openModal() {
+      modalEl.classList.add('open');
+      modalEl.setAttribute('aria-hidden', 'false');
+      document.getElementById('title').focus();
+    }
+
+    function closeModal() {
+      modalEl.classList.remove('open');
+      modalEl.setAttribute('aria-hidden', 'true');
+      formEl.reset();
+    }
+
+    formEl.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(formEl);
+      const title = String(formData.get('title') || '').trim();
+      const body = String(formData.get('body') || '').trim();
+      const location = String(formData.get('location') || '').trim();
+      const [latInput, lonInput] = location.split(',').map((value) => value.trim());
+
+      if (!title || !body) return;
+
+      const lat = latInput ? Number(latInput) : null;
+      const lon = lonInput ? Number(lonInput) : null;
+      const hasCoords = Number.isFinite(lat) && Number.isFinite(lon);
+
+      const newEntry = {
+        id: String(Date.now()),
+        title,
+        body,
+        isoTime: new Date().toISOString(),
+        lat: hasCoords ? lat : null,
+        lon: hasCoords ? lon : null
+      };
+
+      state.entries.unshift(newEntry);
+      renderEntries();
+      closeModal();
+      statusEl.textContent = 'Entry added';
+    });
+
+    document.getElementById('newEntryBtn').addEventListener('click', openModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalEl.addEventListener('click', (event) => {
+      if (event.target === modalEl) closeModal();
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>

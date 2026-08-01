@@ -71,3 +71,9 @@ Make sure to follow the return instructions closely.
 
 ### Thank you!
 ```- The ICT Conscript Program team```
+
+## Frontend task deployment
+- Run `npm install`.
+- Build the site with `npm run build`.
+- Publish to GitHub Pages with `npm run deploy`.
+- GitHub Pages URL: https://your-username.github.io/test-ictadmission/
