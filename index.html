@@ -21,9 +21,6 @@
     textarea { min-height: 90px; resize: vertical; }
     .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
     .muted { color: #94a3b8; font-size: 0.95rem; }
-    .mini-map { height: 120px; margin-top: 10px; border-radius: 10px; background: linear-gradient(135deg, #bae6fd, #38bdf8); position: relative; overflow: hidden; }
-    .mini-map::after { content: ''; position: absolute; inset: 12px; border: 2px solid rgba(255,255,255,0.8); border-radius: 8px; }
-    .pin { position: absolute; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; border: 2px solid white; transform: translate(-50%, -50%); }
   </style>
 </head>
 <body>
@@ -91,7 +88,6 @@
             <p>${entry.body}</p>
             <div class="muted">${new Date(entry.isoTime).toLocaleString()}</div>
             ${hasCoords ? `<div class="muted">Location: ${entry.lat}, ${entry.lon}</div>` : ''}
-            ${hasCoords ? `<div class="mini-map"><div class="pin" style="left:${(entry.lon + 180) / 360 * 100}%; top:${(90 - entry.lat) / 180 * 100}%;"></div></div>` : ''}
           `;
           entriesEl.appendChild(card);
         });
